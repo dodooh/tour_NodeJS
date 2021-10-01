@@ -5,6 +5,7 @@ const AppError = require('../utils/appError')
 const sendEmail = require('../utils/email')
 const { promisify } = require('util')
 const crypto = require('crypto')
+const { profileEnd } = require('console')
 
 const signToken = id => {
     return jwt.sign(
@@ -12,6 +13,33 @@ const signToken = id => {
                     process.env.JWT_SECRET,
                     { expiresIn: process.env.JWT_EXPIRES_IN }
                 )
+}
+
+const sendToken = (user, statusCode, res) => {
+    user.password = undefined
+    user.passwordChangedAt = undefined
+    const token = signToken(user._id)
+    const cookieOptions = {
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        //secure: true, // true when use HTTPS when in production
+        httpOnly: true
+    }
+    if (process.env.NODE_ENV === "production") {
+        cookieOptions.secure = true
+    }
+    res.cookie(
+        'jwt',
+        token,
+        cookieOptions
+        )
+
+    res.status(statusCode).json({
+        status: 'success',
+        token,
+        data: {
+            user
+        }
+    })
 }
 
 exports.signup = catchAsync(async (req, res, next) => {
@@ -23,16 +51,7 @@ exports.signup = catchAsync(async (req, res, next) => {
         passwordConfirm: req.body.passwordConfirm,
         passwordChangedAt: req.body.passwordChangedAt
     })
-
-    const token = signToken(newUser._id)
-
-    res.status(201).json({
-        status: 'success',
-        token,
-        data: {
-            user: newUser
-        }
-    })
+    sendToken(newUser, 201, res)
 })
 
 exports.login = catchAsync( async (req, res, next) => {
@@ -49,12 +68,9 @@ exports.login = catchAsync( async (req, res, next) => {
     if (!user || !await user.correctPassword(password, user.password)) {
         return next( new AppError('Incorrect email or password', 401))
     }
+    
     //3. if everything is OK, send token to client
-    const token = signToken(user._id)
-    res.status(200).json({
-        status: 'success',
-        token
-    })
+    sendToken(user, 200, res)
 })
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -166,10 +182,20 @@ exports.resetPassword = catchAsync( async (req, res, next) => {
     // 3. update changePasswordAt property for user
  
     // 4. log the user in, send JWT
-    const token = signToken(user._id)
-    
-    res.status(201).json({
-        status: 'success',
-        token
-    })
+    sendToken(user, 200, res)
+})
+
+exports.updatePassword = catchAsync( async (req, res, next) => {
+    // 1. get user from the collection
+    const user = await User.findOne(req.user._id).select('+password')
+    // 2. check if POSTed current password is correct
+    if (!user || !await user.correctPassword(req.body.currentPassword, user.password)) {
+        return next( new AppError('Current password does not match! Please check again', 401))
+    }
+    // 3. if the password is correct
+    user.password = req.body.newPassword
+    user.passwordConfirm = req.body.newPasswordConfirm
+    await user.save()
+    // 4. log user in, send JWT
+    sendToken(user, 200, res) 
 })
