@@ -24,7 +24,7 @@ router.route('/monthly-plan/:year').get(getMonthlyPlan)
 router
     .route('/')
     .get(protect ,getAllTours)
-    .post(createTour)
+    .post(protect, createTour)
 
 router
     .route('/:id')
