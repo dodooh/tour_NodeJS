@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+// const User = require('./userModel')
 const slugify = require('slugify')
 const validator = require('validator')
 const tourSchema = new mongoose.Schema({
@@ -36,7 +37,7 @@ const tourSchema = new mongoose.Schema({
     },
     ratingQuantity: {
         type: Number,
-        default: 0,        
+        default: 0,
     },
     price: {
         type: Number,
@@ -57,7 +58,7 @@ const tourSchema = new mongoose.Schema({
     summary: {
         type: String,
         trim: true,
-        required: [true, 'A tour must have a summary']        
+        required: [true, 'A tour must have a summary']
     },
     description: {
         type: String,
@@ -76,8 +77,38 @@ const tourSchema = new mongoose.Schema({
     startDates: [Date],
     secretTour: { // True: secret , False: not secret
         type: Boolean,
-        default: false 
-    }
+        default: false
+    },
+    startLocation: {
+        // GeoJSON
+        type: {
+            type: String,
+            default: 'Point',
+            enum: ['Point']
+        },
+        coordinates: [Number],
+        address: String,
+        description: String
+    },
+    locations: [
+        {
+            type: {
+                type: String,
+                default: 'Point',
+                enum: ['Point']
+            },
+            coordinates: [Number],
+            address: String,
+            description: String,
+            day: Number
+        }
+    ],
+    guides: [
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User'
+        }
+    ]
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -97,6 +128,12 @@ tourSchema.pre('save', function (next) {
     next()
     
 })
+// EMBEDED Tour - User
+// tourSchema.pre('save', async function (next) {
+//     const guidesPromises = this.guides.map( async id => await User.findById(id))
+//     this.guides = await Promise.all(guidesPromises)
+//     next()
+// })
 
 // tourSchema.pre('save', function (next) {
 //     console.log('Will save document....')

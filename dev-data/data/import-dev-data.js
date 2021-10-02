@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const fs = require('fs')
 const dotenv = require('dotenv')
 const Tour = require('../../models/tourModel')
-dotenv.config({ path: '../../.env' })
+dotenv.config({ path: './.env' })
 
 mongoose
     .connect(process.env.MONGO_URI, {
@@ -12,7 +12,7 @@ mongoose
     .then(() => {console.log("DB Connected")})
     .catch(error => console.log(error));
 
-const tours = JSON.parse(fs.readFileSync('./tours-simple.json', 'utf-8'))
+const tours = JSON.parse(fs.readFileSync('./dev-data/data/tours.json', 'utf-8'))
 
 // import data to database
 
