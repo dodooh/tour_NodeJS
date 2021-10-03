@@ -11,6 +11,7 @@ const {
     deleteReview,
     updateReview,
     setTourUserIds,
+    didPostedThis
 } = require('../controllers/reviewController')
 
 router.use(protect)
@@ -24,7 +25,7 @@ router.route('/')
 
 router.route('/:id')
     .get(getReview)
-    .patch(restrictTo('user', 'admin'), updateReview)
-    .delete(restrictTo('user', 'admin'), deleteReview)
+    .patch(restrictTo('user', 'admin'), didPostedThis, updateReview)
+    .delete(restrictTo('user', 'admin'), didPostedThis, deleteReview)
 
 module.exports = router
