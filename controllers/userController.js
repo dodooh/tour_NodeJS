@@ -1,7 +1,21 @@
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const User = require('../models/userModel')
-const { deleteOne, updateOne, createOne} = require('./handlerFactory')
+const { getAll, getOne, deleteOne, updateOne} = require('./handlerFactory')
+
+
+exports.getUser = getOne(User)
+exports.getAllUsers = getAll(User)
+exports.updateProfile = updateOne(User)
+exports.deleteUser = deleteOne(User)
+
+exports.createUser = (req, res) => {
+    // use log in
+    res.status(400).json({
+        status: 'fail',
+        message: 'please use /login'
+    });
+}
 
 const filterObj = (body, ...params) => {
     const newObj = {}
@@ -12,44 +26,35 @@ const filterObj = (body, ...params) => {
     })
     return newObj
 }
-
-
-exports.checkId = (req, res, next, val) => {
-    console.log(`Tour id is: ${val}`)
-    if (val * 1 > tours.length) { 
-        return res.status(400).json({
-                status: 'fail',
-                message: 'Invalid ID'
-            })
+// Update loged in User
+exports.updateMe = catchAsync(async (req, res, next) => {
+    // 1) Create error if user POSTs password data
+    if (req.body.password || req.body.passwordConfirm) {
+      return next(
+        new AppError(
+          'This route is not for password updates. Please use /updateMyPassword.',
+          400
+        )
+      );
     }
-    req.id = val
-    next()
-}
-exports.getAllUsers = catchAsync(async (req, res) => {
-    const users = await User.find();
+  
+    // 2) Filtered out unwanted fields names that are not allowed to be updated
+    const filteredBody = filterObj(req.body, 'name', 'email');
+  
+    // 3) Update user document
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+      new: true,
+      runValidators: true
+    });
   
     res.status(200).json({
-        status: 'success',
-        result: users.length,
-        data: {
-            users
-        }
+      status: 'success',
+      data: {
+        user: updatedUser
+      }
     });
-})
-exports.getUser = (req, res) => {
-    res.status(500).json({
-        status: 'success',
-        message: 'this route is not defined yet'
-    })
-}
-exports.createUser = (req, res) => {
-    res.status(500).json({
-        status: 'success',
-        message: 'this route is not defined yet'
-    })
-}
+  });
 // DO NOT update password with this
-exports.updateProfile = updateOne(User)
 // deactivate account - for log in user
 exports.deactivateProfile = catchAsync(async (req, res, next) => {
     await User.findByIdAndUpdate(req.user._id, {active: false} )
@@ -60,4 +65,3 @@ exports.deactivateProfile = catchAsync(async (req, res, next) => {
     })
 })
 // delete account from database, for administrator
-exports.deleteUser = deleteOne(User)
