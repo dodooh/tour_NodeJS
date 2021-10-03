@@ -118,6 +118,12 @@ const tourSchema = new mongoose.Schema({
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7  
 })
+// virtual populate
+tourSchema.virtual('reviews', {
+    ref: 'Review', // reference to Review Document
+    foreignField: 'tour', // find all field tour
+    localField: '_id' // with match _id with tour._id
+})
 // DOCUMENT MIDDLEWARE: runs before .save() and .create()
 // NOT FOR UPDATE
 
@@ -134,18 +140,6 @@ tourSchema.pre('save', function (next) {
 //     this.guides = await Promise.all(guidesPromises)
 //     next()
 // })
-
-// tourSchema.pre('save', function (next) {
-//     console.log('Will save document....')
-//      next()
-     
-//  })
-
-// tourSchema.post('save', function (docs, next) {
-//     // 'this' is the currently process document that on .save() || .create()
-//      console.log(docs)
-//      next()   
-//  })
 
 // QUERY MIDDLEWARE: 
 // tourSchema.pre('find', function (next) {

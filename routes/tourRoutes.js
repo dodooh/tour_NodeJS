@@ -13,6 +13,7 @@ const {
     // checkBody
 } = require('../controllers/tourController')
 const { protect, restrictTo } = require('../controllers/authController')
+const reviewRoutes = require('./reviewRoutes')
 // router.param('id', checkId)
 
 // As soon as someone route to /top-5-cheap
@@ -21,15 +22,19 @@ const { protect, restrictTo } = require('../controllers/authController')
 router.route('/top-5-cheap').get(aliasTopTour, getAllTours)
 router.route('/tours-stats').get(getTourStats)
 router.route('/monthly-plan/:year').get(getMonthlyPlan)
+
+router.use('/:tourId/reviews', reviewRoutes)
+
 router
     .route('/')
     .get(protect ,getAllTours)
-    .post(protect, createTour)
+    .post(protect,restrictTo('admin', 'lead-guide'), createTour)
 
 router
     .route('/:id')
     .get(getTour)
-    .patch(updateTour)
+    .patch(protect,
+        restrictTo('admin', 'lead-guide'),updateTour)
     .delete(
         protect,
         restrictTo('admin', 'lead-guide'),

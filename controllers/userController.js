@@ -1,6 +1,7 @@
 const catchAsync = require('../utils/catchAsync')
 const AppError = require('../utils/appError')
 const User = require('../models/userModel')
+const { deleteOne, updateOne, createOne} = require('./handlerFactory')
 
 const filterObj = (body, ...params) => {
     const newObj = {}
@@ -47,18 +48,10 @@ exports.createUser = (req, res) => {
         message: 'this route is not defined yet'
     })
 }
-exports.updateProfile = catchAsync( async (req, res, next) => {
-    if (req.body.password || req.body.passwordConfirm) {
-        return next( new AppError('Password change is permitted! Go to /updatePassword', 400))
-    }
-    const filteredObject = filterObj(req.body, 'name', 'email')
-    const user = await User.findByIdAndUpdate(req.user._id, filteredObject , {new: true, runValidator: true})
-    res.status(200).json({
-        status: 'success',
-        user
-    })
-})
-exports.deleteProfile = catchAsync(async (req, res, next) => {
+// DO NOT update password with this
+exports.updateProfile = updateOne(User)
+// deactivate account - for log in user
+exports.deactivateProfile = catchAsync(async (req, res, next) => {
     await User.findByIdAndUpdate(req.user._id, {active: false} )
 
     res.status(200).json({
@@ -66,3 +59,5 @@ exports.deleteProfile = catchAsync(async (req, res, next) => {
         message: 'delete successfully'
     })
 })
+// delete account from database, for administrator
+exports.deleteUser = deleteOne(User)
