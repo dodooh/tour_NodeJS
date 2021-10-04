@@ -115,8 +115,10 @@ const tourSchema = new mongoose.Schema({
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
 })
-// tourSchema.index({price: 1, ratingAverage: -1})
-// tourSchema.index({slug: 1})
+tourSchema.index({price: 1, ratingAverage: -1})
+
+tourSchema.index({slug: 1})
+tourSchema.index({startLocation: '2dsphere'})
 // Can't not select durationWeeks in query
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7  
@@ -159,11 +161,11 @@ tourSchema.post(/^find/, function (docs, next) {
 })
 
 // AGGREGATION MIDDLEWARE
-tourSchema.pre('aggregate', function (next) {
-    this.pipeline().unshift({
-        $match: { secretTour: {$ne: true}}
-    })
-    next()
+// tourSchema.pre('aggregate', function (next) {
+//     this.pipeline().unshift({
+//         $match: { secretTour: {$ne: true}}
+//     })
+//     next()
 
-})
+// })
 module.exports = mongoose.model('Tour', tourSchema)
