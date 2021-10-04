@@ -16,7 +16,7 @@ exports.didPostedThis = catchAsync(async (req, res, next) => {
         return next(new AppError('Not found this review', 400))
     }
     console.log('03')
-    if (!(review.user._id === req.user._id)) {
+    if (!(review.user._id.toString() === req.user._id.toString())) {
         return next(new AppError('You can not modify this review! This review belongs into someone else! Try again', 400))
     }
     console.log('04')
