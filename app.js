@@ -10,9 +10,15 @@ const reviewRouter = require('./routes/reviewRoutes')
 const mongoSanitize = require('express-mongo-sanitize')
 const xssClean = require('xss-clean')
 const hpp = require('hpp')
-
+const path = require('path')
 const app = express();
+
+app.set('view engine', 'pug')
+app.set('views', path.join(__dirname, 'views'))
 // 1) GLOBAL MIDDLEWARES
+// Serving static file
+app.use(express.static(path.join(__dirname, 'public')));
+
 // set security HTTP headers
 app.use(helmet())
 
@@ -43,8 +49,7 @@ app.use(hpp({
     'duration', 'ratingQuantity', 'maxGroupSize', 'ratingAverage', 'difficulty', 'price'
   ]
 }))
-// Serving static file
-app.use(express.static(`${__dirname}/public`));
+
 // Test middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
@@ -53,6 +58,13 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    tour: 'The bike camper',
+    user: 'William Nguyen'
+  })
+})
+
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
