@@ -153,6 +153,13 @@ tourSchema.pre(/^find/, function (next) {
     this.start = Date.now()
     next()     
 })
+tourSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: 'guides',
+        select: 'role name photo'
+    })
+    next()
+})
 
 tourSchema.post(/^find/, function (docs, next) {
     console.log(`Query find took ${Date.now() - this.start} milisecond`)
