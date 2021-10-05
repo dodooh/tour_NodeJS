@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 // 3) ROUTES
-app.get('/', viewRouter)
+app.use('/', viewRouter)
 
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
